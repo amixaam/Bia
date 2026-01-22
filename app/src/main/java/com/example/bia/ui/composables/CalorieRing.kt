@@ -57,7 +57,6 @@ fun CalorieRing(
             fontSize = 20.sp,
             lineHeight = 24.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.DarkGray
         )
     }
 }

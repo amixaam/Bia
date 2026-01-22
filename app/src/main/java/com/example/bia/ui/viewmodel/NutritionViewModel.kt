@@ -54,4 +54,10 @@ class NutritionViewModel(private val mealDao: MealDao) : ViewModel() {
             mealDao.saveMeal(mealEntry)
         }
     }
+
+    fun deleteAllMeals() {
+        viewModelScope.launch {
+            mealDao.deleteAllMealsFromDateRange(todayRange.first, todayRange.second)
+        }
+    }
 }
