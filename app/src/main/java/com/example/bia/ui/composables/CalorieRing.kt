@@ -1,12 +1,27 @@
 package com.example.bia.ui.composables
 
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.EaseInBack
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.EaseOutElastic
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -26,38 +41,63 @@ fun CalorieRing(
 
     // how many degrees the circle is filled
     val fillAngle = (consumed.toFloat() / goal.toFloat()).coerceAtMost(1f) * arcAngleSweep
+    val animatedFillAngle by animateFloatAsState(
+        targetValue = fillAngle,
+        animationSpec = tween(durationMillis = 750, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)),
+        label = "CalorieRingAnimation"
+    )
 
     val caloriesLeft = (goal - consumed).coerceAtLeast(0)
 
     val arcStrokeWidth = 16.dp
+    val spacing = (arcStrokeWidth / 2)
+
+    val colorScheme = MaterialTheme.colorScheme
 
     Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
-        Canvas(modifier = Modifier.size(200.dp)) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
             // empty ring
             drawArc(
-                color = Color.LightGray.copy(alpha = 0.45f),
+                color = colorScheme.surfaceVariant,
                 startAngle = 180f - arcAngleOutset,
                 sweepAngle = arcAngleSweep,
                 useCenter = false,
+                topLeft = Offset(spacing.toPx(), spacing.toPx()),
+                size = Size(
+                    width = size.width - spacing.toPx() * 2,
+                    height = size.height - spacing.toPx() * 2
+                ),
                 style = Stroke(width = arcStrokeWidth.toPx(), cap = StrokeCap.Round)
             )
             // filled ring
             drawArc(
-                color = Color(0xFF4CAF50),
+                color = colorScheme.primary,
                 startAngle = 180f - arcAngleOutset,
-                sweepAngle = fillAngle,
+                sweepAngle = animatedFillAngle,
                 useCenter = false,
+                topLeft = Offset(spacing.toPx(), spacing.toPx()),
+                size = Size(
+                    width = size.width - spacing.toPx() * 2,
+                    height = size.height - spacing.toPx() * 2
+                ),
                 style = Stroke(width = arcStrokeWidth.toPx(), cap = StrokeCap.Round)
             )
         }
 
 //        TODO: Show different text if over calorie limit
-        Text(
-            text = "$caloriesLeft\bkcal left",
-            fontSize = 20.sp,
-            lineHeight = 24.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "$caloriesLeft",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colorScheme.onSurface
+            )
+            Text(
+                text = "kcal left",
+                style = MaterialTheme.typography.labelLarge,
+                color = colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
