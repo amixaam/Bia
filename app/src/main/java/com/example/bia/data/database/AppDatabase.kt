@@ -8,12 +8,15 @@ import androidx.room.TypeConverters
 import com.example.bia.data.Converters
 import com.example.bia.data.FoodItem
 import com.example.bia.data.MealEntry
+import com.example.bia.data.MealGroup
 
-@Database(entities = [FoodItem::class, MealEntry::class], version = 1)
+@Database(entities = [FoodItem::class, MealEntry::class, MealGroup::class], version = 1)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun foodDao() : FoodDao
     abstract fun mealDao() : MealDao
+
+    abstract fun groupDao() : GroupDao
 
     // Singleton block
     companion object {

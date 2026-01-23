@@ -54,7 +54,12 @@ fun CalorieRing(
 
     val colorScheme = MaterialTheme.colorScheme
 
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+                .size(200.dp)
+//                .border(width = 1.dp, color = colorScheme.error)
+    ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             // empty ring
             drawArc(
@@ -64,8 +69,8 @@ fun CalorieRing(
                 useCenter = false,
                 topLeft = Offset(spacing.toPx(), spacing.toPx()),
                 size = Size(
-                    width = size.width - spacing.toPx() * 2,
-                    height = size.height - spacing.toPx() * 2
+                    width = size.width - arcStrokeWidth.toPx(),
+                    height = size.height - arcStrokeWidth.toPx()
                 ),
                 style = Stroke(width = arcStrokeWidth.toPx(), cap = StrokeCap.Round)
             )
@@ -77,8 +82,8 @@ fun CalorieRing(
                 useCenter = false,
                 topLeft = Offset(spacing.toPx(), spacing.toPx()),
                 size = Size(
-                    width = size.width - spacing.toPx() * 2,
-                    height = size.height - spacing.toPx() * 2
+                    width = size.width - arcStrokeWidth.toPx(),
+                    height = size.height - arcStrokeWidth.toPx()
                 ),
                 style = Stroke(width = arcStrokeWidth.toPx(), cap = StrokeCap.Round)
             )

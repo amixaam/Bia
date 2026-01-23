@@ -1,6 +1,7 @@
 package com.example.bia.data.database
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.example.bia.data.FoodItem
@@ -9,6 +10,9 @@ import com.example.bia.data.FoodItem
 interface FoodDao {
     @Insert
     suspend fun saveFood(food: FoodItem)
+
+    @Delete
+    suspend fun deleteFood(food: FoodItem)
 
     @Query("SELECT * FROM FoodItem")
     suspend fun getAllFood() : List<FoodItem>

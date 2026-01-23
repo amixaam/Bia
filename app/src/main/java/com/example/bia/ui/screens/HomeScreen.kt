@@ -12,6 +12,8 @@ import com.example.bia.data.MealEntry
 import com.example.bia.ui.composables.CalorieRing
 import com.example.bia.ui.viewmodel.NutritionViewModel
 import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun HomeScreen(viewModel: NutritionViewModel) {
@@ -41,6 +43,7 @@ fun HomeScreen(viewModel: NutritionViewModel) {
                 viewModel.addMeal(
                     MealEntry(
                         foodId = 0,
+                        groupId = 0,
                         quantity = 1f,
                         timestamp = Instant.now(),
                         caloriesSnapshot = 200,
@@ -68,7 +71,7 @@ fun HomeScreen(viewModel: NutritionViewModel) {
 
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(meals) { meal ->
-                    Text("Eaten: ${meal.nameSnapshot} (${meal.caloriesSnapshot} kcal)")
+                    Text("Eaten: ${meal.nameSnapshot} (${meal.caloriesSnapshot} kcal) at ${meal.timestamp.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))}")
                 }
             }
         }
