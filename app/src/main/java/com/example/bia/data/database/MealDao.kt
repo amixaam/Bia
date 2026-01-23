@@ -19,6 +19,9 @@ interface MealDao {
     @Query("DELETE FROM MealEntry WHERE timestamp >= :start AND timestamp <= :end")
     suspend fun deleteAllMealsFromDateRange(start: Instant, end: Instant)
 
+    @Query("DELETE FROM MealEntry")
+    suspend fun deleteAllMeals()
+
     @Query("SELECT * FROM MealEntry WHERE timestamp >= :start AND timestamp <= :end")
     fun getMealsFromDateRange(start: Instant, end: Instant) : Flow<List<MealEntry>>
 }

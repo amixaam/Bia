@@ -26,7 +26,7 @@ data class MealEntry (
     val id: Int = 0,
     val foodId: Int?,
     val groupId: Int,
-    val quantity: Float,
+    val quantity: Float, // quantity in g or ml
     val timestamp: Instant,
 
     // only show if food item dies

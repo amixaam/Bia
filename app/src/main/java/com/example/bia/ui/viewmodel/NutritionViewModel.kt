@@ -2,10 +2,12 @@ package com.example.bia.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bia.data.FoodItem
 import com.example.bia.data.MealEntry
 import com.example.bia.data.MealGroup
+import com.example.bia.data.database.FoodDao
+import com.example.bia.data.database.GroupDao
 import com.example.bia.data.database.MealDao
-import com.example.bia.data.mealCategories
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,13 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
-class NutritionViewModel(private val mealDao: MealDao) : ViewModel() {
+class NutritionViewModel(private val mealDao: MealDao, private val foodDao: FoodDao, private val groupDao: GroupDao) : ViewModel() {
     private fun calculateTodayRange(): Pair<Instant, Instant> {
         val zone = ZoneId.systemDefault() //timezone
         val today = LocalDate.now()
@@ -30,73 +30,75 @@ class NutritionViewModel(private val mealDao: MealDao) : ViewModel() {
         return Pair(start, end)
     }
 
-//    // group eaten foods. any food within 30 minutes gets grouped.
-//    fun groupMeals(entries: List<MealEntry>): List<MealGroup> {
-//        if (entries.isEmpty()) return emptyList()
-//
-//        val sortedEntries = entries.sortedBy { it.timestamp }
-//
-//        val groups = sortedEntries.fold(mutableListOf<MutableList<MealEntry>>()) { groups, entry ->
-//            val lastGroup = groups.lastOrNull()
-//            if (lastGroup == null || Duration.between(lastGroup.last().timestamp, entry.timestamp).toMinutes() >= 30) {
-//                groups.add(mutableListOf(entry))
-//            } else {
-//                lastGroup.add(entry)
-//            }
-//            groups
-//        }
-//
-//        val finalizedGroups = mutableListOf<MealGroup>()
-//
-//        // groups without duplicates
-//        for (group in groups) {
-//            val totalCalories = group.sumOf { it.caloriesSnapshot }
-//            val lastSavedTime = group.last().timestamp.atZone(ZoneId.systemDefault())
-//
-//            finalizedGroups.add(
-//                MealGroup(
-//                    group,
-//                    totalCalories,
-//                    lastSavedTime.toInstant()
-//                )
-//            )
-//        }
-//
-//        return finalizedGroups
-//    }
-
     val todayRange = calculateTodayRange()
-    val mealEntries: StateFlow<List<MealEntry>> = mealDao
+    val todaysGroups: StateFlow<List<MealGroup>> = groupDao
+        .getMealGroupsFromDateRange(todayRange.first, todayRange.second)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val todaysMeals: StateFlow<List<MealEntry>> = mealDao
         .getMealsFromDateRange(todayRange.first, todayRange.second)
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Companion.WhileSubscribed(5000),
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    val allFoods: StateFlow<List<FoodItem>> = foodDao
+        .getAllFood()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     //TODO: Later switch this out with an actual estimate
     val _calorieGoal = MutableStateFlow<Int>(2500)
     val calorieGoal = _calorieGoal.asStateFlow()
 
-    val totalCaloriesConsumed: StateFlow<Int> = mealEntries
-        .map { list ->
-            list.sumOf { it.caloriesSnapshot }
-        }
-        .stateIn(
+    val totalCaloriesConsumed: StateFlow<Int> = todaysMeals
+        .map { entries -> entries.sumOf { (it.caloriesSnapshot * (it.quantity/100f)).toInt() }
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = 0
         )
 
 
-    fun addMeal(mealEntry: MealEntry) {
+    fun addMeal(mealEntry: MealEntry, groupId: Int) {
         viewModelScope.launch {
-            mealDao.saveMeal(mealEntry)
+            val finalGroupId = if (groupId == -1) {
+                groupDao.createMealGroup(
+                    MealGroup(
+                        // TODO: generate name based on daytime
+                        title = "New Group",
+                        timestamp = Instant.now()
+                    )
+                ).toInt()
+            } else {
+                groupId
+            }
+
+            val newMealEntry = mealEntry.copy(groupId = finalGroupId)
+            mealDao.saveMeal(newMealEntry)
         }
     }
 
-    fun deleteAllMeals() {
+    fun addFood(foodItem: FoodItem) {
         viewModelScope.launch {
-            mealDao.deleteAllMealsFromDateRange(todayRange.first, todayRange.second)
+            foodDao.saveFood(foodItem)
         }
     }
+
+    fun clearAllData() {
+        viewModelScope.launch {
+            mealDao.deleteAllMeals()
+            groupDao.deleteAllGroups()
+            foodDao.deleteAllFood()
+        }
+    }
+
 }

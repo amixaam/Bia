@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.absoluteValue
 
 @Composable
 fun CalorieRing(
@@ -39,15 +40,26 @@ fun CalorieRing(
     val arcAngleOutset = 55f
     val arcAngleSweep = 180f + arcAngleOutset * 2
 
+    val sweepAnimationEasing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
+
     // how many degrees the circle is filled
     val fillAngle = (consumed.toFloat() / goal.toFloat()).coerceAtMost(1f) * arcAngleSweep
     val animatedFillAngle by animateFloatAsState(
         targetValue = fillAngle,
-        animationSpec = tween(durationMillis = 750, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)),
+        animationSpec = tween(durationMillis = 750, easing = sweepAnimationEasing),
         label = "CalorieRingAnimation"
     )
 
     val caloriesLeft = (goal - consumed).coerceAtLeast(0)
+    val caloriesExcess = if (goal - consumed < 0) (goal - consumed).absoluteValue else 0
+
+    val excessFillAngle = (caloriesExcess.toFloat() / goal.toFloat()).coerceAtMost(1f) * arcAngleSweep
+    val animatedExcessFillAngle by animateFloatAsState(
+        targetValue = excessFillAngle,
+        animationSpec = tween(durationMillis = 750, easing = sweepAnimationEasing),
+        label = "ExcessCalorieRingAnimation"
+
+    )
 
     val arcStrokeWidth = 16.dp
     val spacing = (arcStrokeWidth / 2)
@@ -87,18 +99,34 @@ fun CalorieRing(
                 ),
                 style = Stroke(width = arcStrokeWidth.toPx(), cap = StrokeCap.Round)
             )
+
+            // overfilled ring
+            drawArc(
+                color = colorScheme.error,
+                startAngle = 180f - arcAngleOutset,
+                sweepAngle = animatedExcessFillAngle,
+                useCenter = false,
+                topLeft = Offset(spacing.toPx(), spacing.toPx()),
+                size = Size(
+                    width = size.width - arcStrokeWidth.toPx(),
+                    height = size.height - arcStrokeWidth.toPx()
+                ),
+                style = Stroke(width = arcStrokeWidth.toPx(), cap = StrokeCap.Round)
+            )
         }
 
-//        TODO: Show different text if over calorie limit
+//        TODO: Animate the text into bigger size, red (once) and a little shake every so often if over limit
+        val leftOrOver = if (excessFillAngle == 0f) "left" else "over"
+        val calorieDisplay = if (excessFillAngle == 0f) caloriesLeft else caloriesExcess
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "$caloriesLeft",
+                text = "$calorieDisplay",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.SemiBold,
                 color = colorScheme.onSurface
             )
             Text(
-                text = "kcal left",
+                text = "kcal $leftOrOver",
                 style = MaterialTheme.typography.labelLarge,
                 color = colorScheme.onSurfaceVariant
             )

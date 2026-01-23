@@ -2,6 +2,7 @@ package com.example.bia.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.Instant
 
 @Entity
 data class FoodItem(
@@ -16,4 +17,5 @@ data class FoodItem(
     val fat: Float,
 
     val unit: MeasureUnit = MeasureUnit.G,
+    val lastUsed: Instant
 )
