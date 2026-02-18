@@ -1,17 +1,12 @@
 package com.example.bia
 
 import android.os.Bundle
-import android.view.Surface
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavHost
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,7 +14,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.bia.data.database.AppDatabase
 import com.example.bia.ui.screens.AddMealScreen
+import com.example.bia.ui.screens.CreateFoodScreen
 import com.example.bia.ui.screens.HomeScreen
+import com.example.bia.ui.screens.ScanBarcodeScreen
 import com.example.bia.ui.theme.BiaTheme
 import com.example.bia.ui.viewmodel.NutritionViewModel
 
@@ -67,7 +64,23 @@ class MainActivity : ComponentActivity() {
                             AddMealScreen(
                                 viewModel,
                                 groupId,
-                                { navController.popBackStack() }
+                                onBackClick = { navController.popBackStack() },
+                                onCreateFoodClick = { navController.navigate("CreateFoodScreen") },
+                                onScanBarcodeClick = {navController.navigate("ScanBarcodeScreen")}
+                            )
+                        }
+
+                        composable("CreateFoodScreen") {
+                            CreateFoodScreen(
+                                viewModel = viewModel,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable("ScanBarcodeScreen") {
+                            ScanBarcodeScreen(
+                                viewModel = viewModel,
+                                onBackClick = { navController.popBackStack() }
                             )
                         }
                     }

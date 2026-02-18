@@ -1,8 +1,11 @@
 package com.example.bia.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,7 +35,9 @@ import java.time.Instant
 fun AddMealScreen(
     viewModel: NutritionViewModel,
     groupId: Int, // -1 is new group
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onCreateFoodClick: () -> Unit,
+    onScanBarcodeClick: () -> Unit
 ) {
     val allFoods by viewModel.allFoods.collectAsState(initial = emptyList())
 
@@ -68,26 +73,35 @@ fun AddMealScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Button({viewModel.addFood(
-                FoodItem(
-                    id = 0,
-                    name = "fake food",
-                    calories = 590,
-                    unit = MeasureUnit.G,
-                    fat = 31f,
-                    carbs = 24f,
-                    protein = 69f,
-                    brand = null,
-                    lastUsed = Instant.now()
-                )
-            )}) {
-                Text("Create fake item")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onCreateFoodClick,
+                    modifier = Modifier
+                        .weight(1f)
+                ) {
+                    Text("Create Food Item")
+                }
+                Button(
+                    onClick = onScanBarcodeClick,
+                    modifier = Modifier
+                        .weight(1f)
+                ) {
+                    Text("Scan barcode")
+                }
             }
+
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(allFoods) { food ->
                     ListItem(
                         headlineContent = { Text(food.name) },
-                        supportingContent = { Text("${food.calories} kcal per 100g") },
+                        supportingContent = {
+                            val unitText = if (food.unit == MeasureUnit.G) "100g" else "100ml"
+                            Text("${food.calories} kcal per $unitText")
+                        },
                         modifier = Modifier.clickable { onFoodSelected(food) }
                     )
                 }
