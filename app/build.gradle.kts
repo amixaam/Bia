@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.camera.mlkit.vision)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -65,4 +66,13 @@ dependencies {
     androidTestImplementation(libs.androidx.navigation.testing)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.accompanist.permissions)
+
+    // CameraX
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
+    // ML Kit Barcode Scanning
+    implementation(libs.google.mlkit.barcode.scanning)
 }
