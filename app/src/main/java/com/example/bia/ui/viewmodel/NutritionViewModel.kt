@@ -11,6 +11,7 @@ import com.example.bia.data.dataclass.ScannedProduct
 import com.example.bia.data.database.FoodDao
 import com.example.bia.data.database.MealDao
 import com.example.bia.data.database.ServingDao
+import com.example.bia.util.generateMealTitle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -99,8 +100,7 @@ class NutritionViewModel(
             val finalMealId = if (mealId == -1) {
                 mealDao.createMeal(
                     Meal(
-                        // TODO: generate name based on daytime
-                        title = "New Group",
+                        title = generateMealTitle(Instant.now()),
                         pinned = false,
                         timestamp = Instant.now()
                     )
