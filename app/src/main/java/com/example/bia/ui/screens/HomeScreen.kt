@@ -12,8 +12,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.bia.data.MealEntry
-import com.example.bia.data.MealGroup
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.bia.data.dataclass.Serving
+import com.example.bia.data.dataclass.Meal
 import com.example.bia.ui.composables.CalorieRing
 import com.example.bia.ui.viewmodel.NutritionViewModel
 import java.time.ZoneId
@@ -24,10 +27,23 @@ fun HomeScreen(
     viewModel: NutritionViewModel,
     onAddMealClick: (Int) -> Unit
 ) {
-    val groups by viewModel.todaysGroups.collectAsState()
+    val meals by viewModel.todaysMeals.collectAsState()
     val consumed by viewModel.totalCaloriesConsumed.collectAsState()
     val goal by viewModel.calorieGoal.collectAsState()
-    val meals by viewModel.todaysMeals.collectAsState()
+    val servings by viewModel.todaysServings.collectAsState()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshDate()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -35,11 +51,12 @@ fun HomeScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete all data?") },
-            text = { Text("This will permanently remove all your meals and groups. This action cannot be undone.") },
+            text = { Text("This will permanently remove all your meals and servings. This action cannot be undone.") },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.clearAllData()
+                        viewModel.clearAllServings()
+                        viewModel.clearAllMeals()
                         showDeleteDialog = false
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
@@ -98,9 +115,9 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                items(groups) { group ->
-                    val groupMeals = meals.filter { it.groupId == group.id }
-                    GroupList(group, groupMeals, onAddMealClick)
+                items(meals) { group ->
+                    val groupMeals = servings.filter { it.mealId == group.id }
+                    MealList(group, groupMeals, onAddMealClick)
                 }
             }
         }
@@ -108,13 +125,13 @@ fun HomeScreen(
 }
 
 @Composable
-fun GroupList(
-    group: MealGroup,
-    groupMeals: List<MealEntry>,
+fun MealList(
+    meal: Meal,
+    servings: List<Serving>,
     onAddClick: (Int) -> Unit
 ) {
-    val itemCount = groupMeals.size
-    val groupCalories = groupMeals.sumOf { (it.caloriesSnapshot * (it.quantity / 100f)).toInt() }
+    val itemCount = servings.size
+    val servingCalories = servings.sumOf { (it.caloriesSnapshot * (it.quantity / 100f)).toInt() }
 
     Row(
         modifier = Modifier
@@ -131,18 +148,18 @@ fun GroupList(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = group.title ?: "Meal group",
+                    text = meal.title ?: "Meal",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = group.timestamp.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm")),
+                    text = meal.timestamp.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm")),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
             }
             Text(
-                text = "$itemCount items, $groupCalories calories",
+                text = "$itemCount items, $servingCalories calories",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -151,11 +168,11 @@ fun GroupList(
 
         FilledTonalIconButton(
             modifier = Modifier,
-            onClick = { onAddClick(group.id) }
+            onClick = { onAddClick(meal.id) }
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Add products",
+                contentDescription = "Add food",
             )
         }
     }

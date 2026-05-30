@@ -1,8 +1,4 @@
-package com.example.bia.data
-
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import java.time.Instant
+package com.example.bia.data.dataclass
 
 data class MealCategory(
     val name: String,

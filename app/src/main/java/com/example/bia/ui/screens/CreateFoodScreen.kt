@@ -28,7 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.bia.data.FoodItem
+import com.example.bia.data.dataclass.Food
 import com.example.bia.data.MeasureUnit
 import com.example.bia.ui.viewmodel.NutritionViewModel
 import java.time.Instant
@@ -149,7 +149,7 @@ fun CreateFoodScreen(
                     if (!isValid) return@Button
 
                     viewModel.addFood(
-                        FoodItem(
+                        Food(
                             name = name.trim(),
                             brand = brand.trim().ifBlank { null },
                             calories = calories!!,

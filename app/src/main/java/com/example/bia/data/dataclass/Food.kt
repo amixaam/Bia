@@ -1,11 +1,12 @@
-package com.example.bia.data
+package com.example.bia.data.dataclass
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.bia.data.MeasureUnit
 import java.time.Instant
 
 @Entity
-data class FoodItem(
+data class Food(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,

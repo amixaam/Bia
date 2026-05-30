@@ -24,8 +24,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.bia.data.FoodItem
-import com.example.bia.data.MealEntry
+import com.example.bia.data.dataclass.Food
+import com.example.bia.data.dataclass.Serving
 import com.example.bia.data.MeasureUnit
 import com.example.bia.ui.viewmodel.NutritionViewModel
 import java.time.Instant
@@ -34,24 +34,25 @@ import java.time.Instant
 @Composable
 fun AddMealScreen(
     viewModel: NutritionViewModel,
-    groupId: Int, // -1 is new group
+    mealId: Int, // -1 is new meal
     onBackClick: () -> Unit,
     onCreateFoodClick: () -> Unit,
     onScanBarcodeClick: () -> Unit
 ) {
     val allFoods by viewModel.allFoods.collectAsState(initial = emptyList())
 
-    fun onFoodSelected(foodItem: FoodItem) {
-        val newMealItem = MealEntry(
-            foodId = foodItem.id,
-            groupId = 0, // gonna be replaced
+    fun onFoodSelected(food: Food) {
+        val newServing = Serving(
+            foodId = food.id,
+            mealId = 0, // gonna be replaced
             quantity = 100f,
             timestamp = Instant.now(),
-            caloriesSnapshot = foodItem.calories,
-            nameSnapshot = foodItem.name
+            caloriesSnapshot = food.calories,
+            nameSnapshot = food.name
         )
 
-        viewModel.addMeal(newMealItem, groupId)
+        viewModel.updateFoodLastUsed(food)
+        viewModel.addServing(newServing, mealId)
         onBackClick()
     }
 
@@ -83,7 +84,7 @@ fun AddMealScreen(
                     modifier = Modifier
                         .weight(1f)
                 ) {
-                    Text("Create Food Item")
+                    Text("Register Food")
                 }
                 Button(
                     onClick = onScanBarcodeClick,

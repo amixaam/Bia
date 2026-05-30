@@ -75,4 +75,8 @@ dependencies {
 
     // ML Kit Barcode Scanning
     implementation(libs.google.mlkit.barcode.scanning)
+
+    // Retrofit
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
 }

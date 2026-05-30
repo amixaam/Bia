@@ -2,21 +2,24 @@ package com.example.bia.data.database
 
 import android.content.Context
 import androidx.room.Database
+import androidx.room.migration.Migration
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.bia.data.Converters
-import com.example.bia.data.FoodItem
-import com.example.bia.data.MealEntry
-import com.example.bia.data.MealGroup
+import com.example.bia.data.dataclass.Food
+import com.example.bia.data.dataclass.Serving
+import com.example.bia.data.dataclass.Meal
+import com.example.bia.data.dataclass.ScannedProduct
 
-@Database(entities = [FoodItem::class, MealEntry::class, MealGroup::class], version = 1)
+@Database(entities = [Food::class, Serving::class, Meal::class, ScannedProduct::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun foodDao() : FoodDao
-    abstract fun mealDao() : MealDao
+    abstract fun servingDao() : ServingDao
 
-    abstract fun groupDao() : GroupDao
+    abstract fun mealDao() : MealDao
 
     // Singleton block
     companion object {

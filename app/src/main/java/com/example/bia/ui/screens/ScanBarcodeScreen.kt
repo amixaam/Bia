@@ -14,12 +14,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,6 +36,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -51,10 +57,13 @@ fun ScanBarcodeScreen(
         }
     }
 
-    var scannedCode by rememberSaveable() { mutableStateOf<String?>(null) }
+    var isScanning by rememberSaveable { mutableStateOf(false) }
 
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Scan Barcode") },
@@ -76,18 +85,32 @@ fun ScanBarcodeScreen(
                     CameraPreview(
                         modifier = Modifier.fillMaxSize(),
                         onBarcodeDetected = { code ->
-                            if (scannedCode == null) {
-                                scannedCode = code
-                                // Here we will eventually call the ViewModel to fetch data
-                                println("Detected Barcode: $code")
+                            if (!isScanning) {
+                                isScanning = true
+                                viewModel.scanBarcode(
+                                    code,
+                                    onSuccess = {
+                                        onBackClick()
+                                    },
+                                    onError = { message ->
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(message)
+                                        }
+                                        scope.launch {
+                                            delay(1000)
+                                            isScanning=false
+                                        }
+                                    }
+                                )
                             }
                         }
                     )
 
                     // UI Overlay to help the user align the barcode
-                    if (scannedCode != null) {
+                    if (isScanning) {
                         Box(
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .fillMaxSize()
                                 .background(Color.Black.copy(alpha = 0.5f)),
                             contentAlignment = Alignment.Center
                         ) {
