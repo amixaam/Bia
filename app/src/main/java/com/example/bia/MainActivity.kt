@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -70,13 +72,13 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             HomeScreen(
                                 viewModel,
-                                onAddMealClick = { groupId -> navController.navigate("AddMealScreen/$groupId")}
+                                onAddMealClick = { mealId -> navController.navigate("AddMealScreen/$mealId")}
                             )
                         }
 
                         composable(
-                            "AddMealScreen/{groupId}",
-                            arguments = listOf(navArgument("groupId") { type = NavType.IntType }),
+                            "AddMealScreen/{mealId}",
+                            arguments = listOf(navArgument("mealId") { type = NavType.IntType }),
                             enterTransition = {
                                 // Start from the full height of the screen (bottom)
                                 slideInVertically(initialOffsetY = { it })
@@ -87,20 +89,28 @@ class MainActivity : ComponentActivity() {
                             }
 
                         ) { backStackEntry ->
-                            val groupId = backStackEntry.arguments?.getInt("groupId") ?: -1
+                            val mealId = backStackEntry.arguments?.getInt("mealId") ?: -1
                             AddMealScreen(
                                 viewModel,
-                                groupId,
+                                mealId,
                                 onBackClick = { navController.popBackStack() },
-                                onCreateFoodClick = { navController.navigate("CreateFoodScreen") },
-                                onScanBarcodeClick = {navController.navigate("ScanBarcodeScreen")}
+                                onCreateFoodClick = { navController.navigate("CreateFoodScreen/-1") },
+                                onScanBarcodeClick = {navController.navigate("ScanBarcodeScreen")},
+                                onEditFoodClick =  { foodId -> navController.navigate("CreateFoodScreen/$foodId")}
                             )
                         }
 
-                        composable("CreateFoodScreen") {
+                        composable(
+                            "CreateFoodScreen/{foodId}",
+                            arguments = listOf(navArgument("foodId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            val foodId = backStackEntry.arguments?.getInt("foodId") ?: -1
+                            val allFoods by viewModel.allFoods.collectAsState()
+                            val editFood = if (foodId != -1) allFoods.find { it.id == foodId } else null
                             CreateFoodScreen(
                                 viewModel = viewModel,
-                                onBackClick = { navController.popBackStack() }
+                                foodId = foodId,
+                                onBackClick = { navController.popBackStack() },
                             )
                         }
 

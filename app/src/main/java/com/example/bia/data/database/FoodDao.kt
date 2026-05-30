@@ -24,6 +24,9 @@ interface FoodDao {
     @Query("SELECT * FROM Food ORDER BY lastUsed DESC")
     fun getAllFood() : Flow<List<Food>>
 
+    @Query("SELECT * FROM Food WHERE id = :id")
+    suspend fun getFoodById(id: Int): Food?
+
     @Query("DELETE FROM Food")
     suspend fun deleteAllFood()
 

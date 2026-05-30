@@ -114,9 +114,17 @@ class NutritionViewModel(
         }
     }
 
+    suspend fun getFoodById(id: Int): Food? = foodDao.getFoodById(id)
+
     fun addFood(food: Food) {
         viewModelScope.launch {
             foodDao.createFood(food)
+        }
+    }
+
+    fun updateFood(food: Food) {
+        viewModelScope.launch {
+            foodDao.updateFood(food)
         }
     }
 

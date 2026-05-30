@@ -21,8 +21,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -37,15 +39,22 @@ import java.time.Instant
 @Composable
 fun CreateFoodScreen(
     viewModel: NutritionViewModel,
-    onBackClick: () -> Unit
+    foodId: Int = -1,
+    onBackClick: () -> Unit,
 ) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var brand by rememberSaveable { mutableStateOf("") }
-    var caloriesText by rememberSaveable { mutableStateOf("") }
-    var proteinText by rememberSaveable { mutableStateOf("") }
-    var carbsText by rememberSaveable { mutableStateOf("") }
-    var fatText by rememberSaveable { mutableStateOf("") }
-    var unit by rememberSaveable { mutableStateOf(MeasureUnit.G) }
+    val allFoods by viewModel.allFoods.collectAsState()
+
+    val editFood = remember(foodId, allFoods) {
+        if (foodId != -1) allFoods.find { it.id == foodId } else null
+    }
+
+    var name by rememberSaveable(editFood) { mutableStateOf(editFood?.name ?: "") }
+    var brand by rememberSaveable(editFood) { mutableStateOf(editFood?.brand ?: "") }
+    var caloriesText by rememberSaveable(editFood) { mutableStateOf(editFood?.calories?.toString() ?: "") }
+    var proteinText by rememberSaveable(editFood) { mutableStateOf(editFood?.protein?.toString() ?: "") }
+    var carbsText by rememberSaveable(editFood) { mutableStateOf(editFood?.carbs?.toString() ?: "") }
+    var fatText by rememberSaveable(editFood) { mutableStateOf(editFood?.fat?.toString() ?: "") }
+    var unit by rememberSaveable(editFood) { mutableStateOf(editFood?.unit ?: MeasureUnit.G) }
 
     val calories = caloriesText.toIntOrNull()
     val protein = proteinText.toFloatOrNull()
@@ -61,7 +70,7 @@ fun CreateFoodScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create Food Item") },
+                title = { Text(if (editFood != null) "Edit food" else "Register food") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -148,24 +157,30 @@ fun CreateFoodScreen(
                 onClick = {
                     if (!isValid) return@Button
 
-                    viewModel.addFood(
-                        Food(
-                            name = name.trim(),
-                            brand = brand.trim().ifBlank { null },
-                            calories = calories!!,
-                            protein = protein!!,
-                            carbs = carbs!!,
-                            fat = fat!!,
-                            unit = unit,
-                            lastUsed = Instant.now()
-                        )
+                    val food = Food(
+                        id = editFood?.id ?: 0,
+                        name = name.trim(),
+                        brand = brand.trim().ifBlank { null },
+                        calories = calories,
+                        protein = protein,
+                        carbs = carbs,
+                        fat = fat,
+                        unit = unit,
+                        lastUsed = Instant.now()
                     )
+
+                    if (editFood != null) {
+                        viewModel.updateFood(food)
+                    } else {
+                        viewModel.addFood(food)
+                    }
+
                     onBackClick()
                 },
                 enabled = isValid,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Save Food Item")
+                Text("Save")
             }
         }
     }
