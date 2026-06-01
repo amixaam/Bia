@@ -2,11 +2,13 @@ package com.example.bia.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +27,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun HomeScreen(
     viewModel: NutritionViewModel,
-    onAddMealClick: (Int) -> Unit
+    onAddMealClick: (Int) -> Unit,
+    onScanBarcodeClick: () -> Unit,
 ) {
     val meals by viewModel.todaysMeals.collectAsState()
     val consumed by viewModel.totalCaloriesConsumed.collectAsState()
@@ -75,9 +78,18 @@ fun HomeScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
-            FloatingActionButton(onClick = { onAddMealClick(-1) }) {
-                Icon(Icons.Default.Add, contentDescription = "Add meal")
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                SmallFloatingActionButton(onClick = { onScanBarcodeClick() }) {
+                    Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan barcode")
+                }
+                FloatingActionButton(onClick = { onAddMealClick(-1) }) {
+                    Icon(Icons.Default.Add, contentDescription = "Add meal")
+                }
             }
+
         }
     ) { innerPadding ->
         Column(

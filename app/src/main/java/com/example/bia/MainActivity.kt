@@ -4,8 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -67,27 +73,50 @@ class MainActivity : ComponentActivity() {
                 Surface() {
                     NavHost(
                         navController,
-                        startDestination = "home"
+                        startDestination = "home",
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioLowBouncy,
+                                    stiffness = Spring.StiffnessLow
+                                )
+                            ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow))
+                        },
+                        exitTransition = {
+                            scaleOut(
+                                targetScale = 0.92f,
+                                animationSpec = spring(stiffness = Spring.StiffnessLow)
+                            ) + fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow))
+                        },
+                        popEnterTransition = {
+                            scaleIn(
+                                initialScale = 0.92f,
+                                animationSpec = spring(stiffness = Spring.StiffnessLow)
+                            ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow))
+                        },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioLowBouncy,
+                                    stiffness = Spring.StiffnessLow
+                                )
+                            ) + fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow))
+                        }
                     ) {
                         composable("home") {
                             HomeScreen(
                                 viewModel,
-                                onAddMealClick = { mealId -> navController.navigate("AddMealScreen/$mealId")}
+                                onAddMealClick = { mealId -> navController.navigate("AddMealScreen/$mealId")},
+                                onScanBarcodeClick = { navController.navigate("ScanBarcodeScreen") }
+
                             )
                         }
 
                         composable(
                             "AddMealScreen/{mealId}",
                             arguments = listOf(navArgument("mealId") { type = NavType.IntType }),
-                            enterTransition = {
-                                // Start from the full height of the screen (bottom)
-                                slideInVertically(initialOffsetY = { it })
-                            },
-                            exitTransition = {
-                                // Slide back down to the full height
-                                slideOutVertically(targetOffsetY = { it })
-                            }
-
                         ) { backStackEntry ->
                             val mealId = backStackEntry.arguments?.getInt("mealId") ?: -1
                             AddMealScreen(

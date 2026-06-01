@@ -1,6 +1,7 @@
 package com.example.bia.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,9 +13,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,6 +41,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.ImeAction
@@ -62,6 +67,12 @@ fun AddMealScreen(
     val allFoods by viewModel.allFoods.collectAsState(initial = emptyList())
     var selectedFood by remember { mutableStateOf<Food?>(null) }
 
+    // Best Practice: Defer heavy list composition by one frame to keep transition smooth
+    var listVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        listVisible = true
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -78,48 +89,60 @@ fun AddMealScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(16.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onCreateFoodClick,
-                    modifier = Modifier
-                        .weight(1f)
-                ) {
-                    Text("Register Food")
-                }
-                Button(
-                    onClick = onScanBarcodeClick,
-                    modifier = Modifier
-                        .weight(1f)
-                ) {
-                    Text("Scan barcode")
+            if (listVisible) {
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(allFoods) { food ->
+                        ListItem(
+                            headlineContent = { Text(food.name) },
+                            supportingContent = {
+                                val unitText = if (food.unit == MeasureUnit.G) "100g" else "100ml"
+                                Text("${food.calories} kcal per $unitText")
+                            },
+                            trailingContent = {
+                                IconButton(onClick = { onEditFoodClick(food.id) }) {
+                                    Icon(Icons.Default.Edit, contentDescription = "Edit Food")
+                                }
+                            },
+                            modifier = Modifier
+                                .combinedClickable(
+                                    onClick = { selectedFood = food },
+                                    onLongClick = { onEditFoodClick(food.id) }
+                                )
+                        )
+                    }
                 }
             }
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(allFoods) { food ->
-                    ListItem(
-                        headlineContent = { Text(food.name) },
-                        supportingContent = {
-                            val unitText = if (food.unit == MeasureUnit.G) "100g" else "100ml"
-                            Text("${food.calories} kcal per $unitText")
-                        },
-                        trailingContent = {
-                            IconButton(onClick = { onEditFoodClick(food.id) }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit Food")
-                            }
-                        },
-                        modifier = Modifier
-                            .combinedClickable(
-                                onClick = { selectedFood = food },
-                                onLongClick = { onEditFoodClick(food.id) }
-                            )
-                    )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = {},
+                    placeholder = {Text("Search food...")},
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(
+                    onClick = onScanBarcodeClick,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan barcode", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                }
+                IconButton(
+                    onClick = onCreateFoodClick,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Register Food", tint = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
         }
